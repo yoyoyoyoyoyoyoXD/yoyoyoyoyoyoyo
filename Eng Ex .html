@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2 English: Our School Building & Help the Animals Game</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --secondary: #ff6f61;
+      --accent: #f59e0b;
+      --bg-color: #f0f9ff;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --correct: #2ecc71;
+      --incorrect: #e74c3c;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Trebuchet MS', sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 100%);
+      color: var(--text);
+      margin: 0;
+      padding: 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bunting-container {
+      width: 100%;
+      max-width: 950px;
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 5px;
+    }
+
+    .flag {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 25px solid #ff6b6b;
+    }
+    .flag:nth-child(2n) { border-top-color: #4ecdc4; }
+    .flag:nth-child(3n) { border-top-color: #ffe66d; }
+    .flag:nth-child(4n) { border-top-color: #1a535c; }
+    .flag:nth-child(5n) { border-top-color: #ff9f43; }
+
+    header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    h1 {
+      color: #2563eb;
+      margin: 5px 0;
+      font-size: 2em;
+      text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+    }
+
+    p.subtitle {
+      font-size: 1em;
+      color: #64748b;
+      margin: 0;
+    }
+
+    /* Mode Tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      background: #ffffff;
+      border: 3px solid #cbd5e1;
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 1.1em;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--secondary);
+      color: white;
+      border-color: #ee5253;
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(255, 111, 97, 0.3);
+    }
+
+    .main-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+      max-width: 1000px;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    /* Building Card & Architectural Styling */
+    .building-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border: 4px solid #3b82f6;
+      width: 330px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .building-title {
+      font-weight: bold;
+      color: #1e40af;
+      margin-bottom: 5px;
+      font-size: 1.1em;
+    }
+
+    /* School Roof */
+    .school-roof {
+      width: 100%;
+      height: 0;
+      border-left: 150px solid transparent;
+      border-right: 150px solid transparent;
+      border-bottom: 45px solid #ef4444;
+      position: relative;
+      margin-bottom: -2px;
+    }
+
+    .clock-tower {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      border: 2px solid #b91c1c;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .building {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: #e2e8f0;
+      padding: 8px;
+      border-radius: 0 0 12px 12px;
+      border: 3px solid #ef4444;
+      border-top: none;
+    }
+
+    .floor {
+      padding: 10px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #1e293b;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .game-mode-active .floor {
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .game-mode-active .floor:hover {
+      transform: scale(1.03);
+      border-color: #ff6f61;
+      box-shadow: 0 6px 15px rgba(255, 111, 97, 0.4);
+      z-index: 2;
+    }
+
+    /* Floor Badges (G/F to 6/F) */
+    .floor-badge {
+      background: rgba(255, 255, 255, 0.95);
+      color: #1e293b;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Floor Colors */
+    .f6 { background-color: #e0e7ff; border-left: 8px solid #6366f1; } /* STEM */
+    .f5 { background-color: #fed7aa; border-left: 8px solid #f97316; } /* Computer */
+    .f4 { background-color: #fef08a; border-left: 8px solid #eab308; } /* Library */
+    .f3 { background-color: #fbcfe8; border-left: 8px solid #ec4899; } /* Music */
+    .f2 { background-color: #bbf7d0; border-left: 8px solid #22c55e; } /* Toilet */
+    .f1 { background-color: #bae6fd; border-left: 8px solid #0ea5e9; } /* Hall */
+    .fg { background-color: #ddd6fe; border-left: 8px solid #8b5cf6; } /* Playground */
+
+    .floor-icon-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .floor-emoji {
+      font-size: 1.2em;
+    }
+
+    /* View Content Areas */
+    .view-panel {
+      flex: 1;
+      min-width: 310px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border: 4px solid #cbd5e1;
+    }
+
+    .question-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .q-row {
+      font-size: 1.05em;
+      line-height: 1.6;
+    }
+
+    .blank-input {
+      font-family: inherit;
+      font-size: 1em;
+      border: none;
+      border-bottom: 3px solid #3b82f6;
+      background-color: #f8fafc;
+      text-align: center;
+      width: 260px; /* Long underline */
+      max-width: 100%;
+      padding: 4px 8px;
+      outline: none;
+      color: #0f172a;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      margin: 0 4px;
+    }
+
+    .blank-input:focus {
+      background-color: #f0f9ff;
+      border-bottom-color: var(--secondary);
+    }
+
+    .blank-input.correct {
+      border-bottom: 3px solid var(--correct);
+      background-color: #f0fdf4;
+      color: #15803d;
+    }
+
+    .blank-input.incorrect {
+      border-bottom: 3px solid var(--incorrect);
+      background-color: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .btn-container {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      font-family: inherit;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 111, 97, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(255, 111, 97, 0.4);
+    }
+
+    .action-btn.secondary {
+      background: #64748b;
+      box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+    }
+
+    .result-msg {
+      margin-top: 15px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+      min-height: 30px;
+    }
+
+    /* Game View Styling */
+    .game-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .animal-avatar {
+      font-size: 4em;
+      animation: bounce 1.5s infinite alternate;
+      margin-bottom: 10px;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-12px); }
+    }
+
+    .speech-bubble {
+      position: relative;
+      background: #f0f9ff;
+      border: 3px solid #0284c7;
+      border-radius: 20px;
+      padding: 15px 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #0369a1;
+      margin-bottom: 20px;
+      max-width: 100%;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 0 12px 15px 12px;
+      border-style: solid;
+      border-color: transparent transparent #0284c7 transparent;
+    }
+
+    .game-score-board {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      border: 1px solid #e2e8f0;
+    }
+
+    .score-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="bunting-container">
+    <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+    <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+    <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+  </div>
+
+  <header>
+    <h1>🏫 Primary 2: Our School Building</h1>
+    <p class="subtitle">Learn floor names & help the cute animals find their way!</p>
+  </header>
+
+  <div class="mode-tabs">
+    <button class="tab-btn active" onclick="switchMode('worksheet')">📝 Fill-in Exercise</button>
+    <button class="tab-btn" onclick="switchMode('game')">🐶 Game: Help the Animals!</button>
+  </div>
+
+  <div class="main-layout">
+    <!-- Building Graphic Side -->
+    <div class="building-card" id="building-container">
+      <div class="building-title">🏫 Primary School</div>
+      <div class="school-roof"><div class="clock-tower">🕒</div></div>
+      <div class="building" id="building-floors">
+        <div class="floor f6" data-floor="sixth" onclick="handleFloorClick('sixth')">
+          <div class="floor-icon-name"><span class="floor-emoji">🤖</span> STEM Room</div>
+          <span class="floor-badge">6/F</span>
+        </div>
+        <div class="floor f5" data-floor="fifth" onclick="handleFloorClick('fifth')">
+          <div class="floor-icon-name"><span class="floor-emoji">💻</span> Computer Room</div>
+          <span class="floor-badge">5/F</span>
+        </div>
+        <div class="floor f4" data-floor="fourth" onclick="handleFloorClick('fourth')">
+          <div class="floor-icon-name"><span class="floor-emoji">📚</span> Library</div>
+          <span class="floor-badge">4/F</span>
+        </div>
+        <div class="floor f3" data-floor="third" onclick="handleFloorClick('third')">
+          <div class="floor-icon-name"><span class="floor-emoji">🎵</span> Music Room</div>
+          <span class="floor-badge">3/F</span>
+        </div>
+        <div class="floor f2" data-floor="second" onclick="handleFloorClick('second')">
+          <div class="floor-icon-name"><span class="floor-emoji">🚻</span> Toilet</div>
+          <span class="floor-badge">2/F</span>
+        </div>
+        <div class="floor f1" data-floor="first" onclick="handleFloorClick('first')">
+          <div class="floor-icon-name"><span class="floor-emoji">🎭</span> Hall</div>
+          <span class="floor-badge">1/F</span>
+        </div>
+        <div class="floor fg" data-floor="ground" onclick="handleFloorClick('ground')">
+          <div class="floor-icon-name"><span class="floor-emoji">🛝</span> Playground</div>
+          <span class="floor-badge">G/F</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Worksheet Panel -->
+    <div class="view-panel" id="worksheet-panel">
+      <h2 style="color: #2563eb; margin-top: 0; text-align: center;">Fill in the Blanks</h2>
+      <p style="text-align: center; color: #64748b; font-size: 0.9em; margin-bottom: 20px;">
+        (Write full words, e.g., <i>on the ground floor</i>, <i>on the third floor</i>)
+      </p>
+
+      <div class="question-list" id="questions-container">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div class="btn-container">
+        <button class="action-btn" onclick="checkWorksheet()">Check Answers ✨</button>
+        <button class="action-btn secondary" onclick="initWorksheet()">Shuffle / Reset 🔄</button>
+      </div>
+
+      <div class="result-msg" id="worksheet-result"></div>
+    </div>
+
+    <!-- Game Panel -->
+    <div class="view-panel" id="game-panel" style="display: none;">
+      <div class="game-card">
+        <div class="game-score-board">
+          <div class="score-item">⭐ Score: <span id="game-score">0</span>/6</div>
+          <div class="score-item">🎯 Mission: <span id="game-progress">1</span> of 6</div>
+        </div>
+
+        <div class="animal-avatar" id="animal-emoji">🐰</div>
+        <div class="speech-bubble" id="animal-prompt">
+          Loading mission...
+        </div>
+
+        <p style="color: #64748b; font-size: 0.95em;">
+          👉 <b>Click the correct floor on the school building image!</b>
+        </p>
+
+        <div class="result-msg" id="game-result"></div>
+
+        <div class="btn-container" style="margin-top: 15px;">
+          <button class="action-btn secondary" onclick="initGame()">Play Again 🔄</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Master Floor Data
+    const FLOOR_DATA = [
+      { key: "ground", name: "playground", formal: "on the ground floor" },
+      { key: "first", name: "hall", formal: "on the first floor" },
+      { key: "second", name: "toilet", formal: "on the second floor" },
+      { key: "third", name: "music room", formal: "on the third floor" },
+      { key: "fourth", name: "library", formal: "on the fourth floor" },
+      { key: "fifth", name: "computer room", formal: "on the fifth floor" },
+      { key: "sixth", name: "STEM room", formal: "on the sixth floor" }
+    ];
+
+    // Animal Game Missions (with Bunny: "I want to go skipping!")
+    const ANIMAL_MISSIONS = [
+      { animal: "🐰 Bunny", emoji: "🐰", target: "ground", prompt: "I want to go skipping!" },
+      { animal: "🦁 Lion", emoji: "🦁", target: "first", prompt: "I want to watch the drama performance!" },
+      { animal: "🦊 Fox", emoji: "🦊", target: "second", prompt: "I want to wash hands!" },
+      { animal: "🐶 Puppy", emoji: "🐶", target: "fourth", prompt: "I want to read storybooks!" },
+      { animal: "🐱 Kitty", emoji: "🐱", target: "third", prompt: "I want to play the piano and sing songs!" },
+      { animal: "🐼 Panda", emoji: "🐼", target: "sixth", prompt: "I want to build a robot!" },
+      { animal: "🐻 Teddy", emoji: "🐻", target: "first", prompt: "I need to attend the school assembly!" },
+      { animal: "🐨 Koala", emoji: "🐨", target: "fifth", prompt: "I want to practice typing on computers!" }
+    ];
+
+    let currentMode = 'worksheet';
+    let currentQuestions = [];
+    let currentMissions = [];
+    let gameIndex = 0;
+    let gameScore = 0;
+
+    // Web Audio Sound Effects Synth
+    const playSound = (type) => {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'win') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.1);
+            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.1 + 0.25);
+            o.start(ctx.currentTime + idx * 0.1);
+            o.stop(ctx.currentTime + idx * 0.1 + 0.25);
+          });
+        }
+      } catch(e){}
+    };
+
+    // Mode Switcher
+    function switchMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const buildingContainer = document.getElementById('building-container');
+
+      if (mode === 'worksheet') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('worksheet-panel').style.display = 'block';
+        document.getElementById('game-panel').style.display = 'none';
+        buildingContainer.classList.remove('game-mode-active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('worksheet-panel').style.display = 'none';
+        document.getElementById('game-panel').style.display = 'block';
+        buildingContainer.classList.add('game-mode-active');
+        initGame();
+      }
+    }
+
+    // Shuffle Utility
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    // WORKSHEET LOGIC
+    function initWorksheet() {
+      currentQuestions = shuffle(FLOOR_DATA).slice(0, 6);
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+
+      currentQuestions.forEach((q, idx) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'q-row';
+        qDiv.innerHTML = `Q${idx + 1}. The ${q.name} is <input type="text" class="blank-input" id="ws-q${idx}" data-answer="${q.formal}">.`;
+        container.appendChild(qDiv);
+      });
+
+      document.getElementById('worksheet-result').innerHTML = '';
+    }
+
+    function checkWorksheet() {
+      let score = 0;
+      currentQuestions.forEach((q, idx) => {
+        const input = document.getElementById(`ws-q${idx}`);
+        const userVal = input.value.trim().toLowerCase().replace(/\s+/g, ' ');
+        const expected = q.formal.toLowerCase();
+
+        if (userVal === expected) {
+          input.className = 'blank-input correct';
+          score++;
+        } else {
+          input.className = 'blank-input incorrect';
+        }
+      });
+
+      const resDiv = document.getElementById('worksheet-result');
+      if (score === 6) {
+        resDiv.style.color = '#2ecc71';
+        resDiv.innerHTML = '🎉 Excellent! All 6 answers are correct!';
+        playSound('win');
+        triggerConfetti();
+      } else {
+        resDiv.style.color = '#e67e22';
+        resDiv.innerHTML = `⭐ You got ${score}/6 correct. Check your spelling and try again!`;
+        playSound('wrong');
+      }
+    }
+
+    // GAME LOGIC
+    function initGame() {
+      currentMissions = shuffle(ANIMAL_MISSIONS).slice(0, 6);
+      gameIndex = 0;
+      gameScore = 0;
+      updateGameUI();
+      document.getElementById('game-result').innerHTML = '';
+    }
+
+    function updateGameUI() {
+      if (gameIndex >= currentMissions.length) {
+        document.getElementById('animal-emoji').textContent = '🏆';
+        document.getElementById('animal-prompt').textContent = `Great Job! You helped all animals and scored ${gameScore}/6!`;
+        document.getElementById('game-result').style.color = '#2ecc71';
+        document.getElementById('game-result').textContent = '🎉 You are a School Location Master!';
+        playSound('win');
+        triggerConfetti();
+        return;
+      }
+
+      const current = currentMissions[gameIndex];
+      document.getElementById('game-score').textContent = gameScore;
+      document.getElementById('game-progress').textContent = gameIndex + 1;
+      document.getElementById('animal-emoji').textContent = current.emoji;
+      document.getElementById('animal-prompt').innerHTML = `"${current.prompt}"<br><span style="color:#e11d48; font-size:0.9em;">Where should ${current.animal} go?</span>`;
+      document.getElementById('game-result').textContent = '';
+    }
+
+    function handleFloorClick(floorKey) {
+      if (currentMode !== 'game' || gameIndex >= currentMissions.length) return;
+
+      const current = currentMissions[gameIndex];
+      const resultDiv = document.getElementById('game-result');
+
+      if (floorKey === current.target) {
+        gameScore++;
+        playSound('correct');
+        resultDiv.style.color = '#2ecc71';
+        resultDiv.textContent = `✨ Correct! ${current.animal} found the right floor!`;
+      } else {
+        playSound('wrong');
+        const correctFloorObj = FLOOR_DATA.find(f => f.key === current.target);
+        resultDiv.style.color = '#e74c3c';
+        resultDiv.textContent = `❌ Oops! ${current.animal} needed to go to the ${correctFloorObj.formal}!`;
+      }
+
+      gameIndex++;
+      setTimeout(() => {
+        updateGameUI();
+      }, 1500);
+    }
+
+    // Confetti Animation
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+      for (let i = 0; i < 100; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 10 + 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speed: Math.random() * 5 + 2,
+          angle: Math.random() * 360
+        });
+      }
+
+      let animationFrame;
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.speed;
+          p.angle += 2;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.angle * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if (pieces.some(p => p.y < canvas.height)) {
+          animationFrame = requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      render();
+    }
+
+    window.onload = () => {
+      initWorksheet();
+    };
+  </script>
+</body>
+</html>
