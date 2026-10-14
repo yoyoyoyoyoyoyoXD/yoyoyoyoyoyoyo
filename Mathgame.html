@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二年級數學勇者大冒險 - 單題打怪闖關</title>
+    <!-- 引入字體與圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+        :root {
+            --primary-yellow: #FFD166;
+            --primary-orange: #FF9F1C;
+            --primary-red: #FF4757;
+            --primary-blue: #54A0FF;
+            --primary-green: #2ED573;
+            --bg-color: #1E272C;
+            --card-bg: #FFFFFF;
+            --text-color: #2F3542;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Comic Sans MS', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(rgba(255, 209, 102, 0.15) 15%, transparent 16%),
+                radial-gradient(rgba(84, 160, 255, 0.15) 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            color: var(--text-color);
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 720px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px 22px;
+            border-radius: 24px;
+            border: 5px solid var(--primary-yellow);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        /* 頂部冒險標題區 */
+        .header-box {
+            text-align: center;
+            background: linear-gradient(135deg, #FF4757 0%, #FF9F1C 100%);
+            padding: 18px 15px;
+            border-radius: 18px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 0px #C0392B;
+        }
+
+        .header-box h1 {
+            font-family: 'ZCOOL KuaiLe', 'PingFang TC', cursive;
+            font-size: 26px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.2);
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* 怪獸血條與進度 Dashboard */
+        .boss-dashboard {
+            background: #2F3542;
+            border-radius: 18px;
+            padding: 18px;
+            color: white;
+            margin-bottom: 22px;
+            box-shadow: 0 5px 0px #1E272C;
+        }
+
+        .boss-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .boss-avatar {
+            font-size: 50px;
+            animation: bounce 2s infinite ease-in-out;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+
+        .hp-bar-container {
+            flex: 1;
+            min-width: 180px;
+            background: #57606F;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #747D8C;
+            position: relative;
+        }
+
+        .hp-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #FF4757, #2ED573);
+            transition: width 0.4s ease-in-out;
+            border-radius: 8px;
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* 關卡卡片 (一頁一題) */
+        .stage-card {
+            background: var(--card-bg);
+            border: 3px solid #CED6E0;
+            border-radius: 20px;
+            padding: 25px 20px;
+            box-shadow: 0 6px 0px #CED6E0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .stage-badge {
+            background: var(--primary-yellow);
+            color: #745100;
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 17px;
+            padding: 5px 16px;
+            border-radius: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-add { background-color: #54A0FF; }
+        .badge-sub { background-color: #FF9F1C; }
+        .badge-multi-add { background-color: #2ED573; }
+        .badge-multi-sub { background-color: #FF4757; }
+
+        .question-title {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.6;
+            color: #2F3542;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #F1F2F6;
+            padding: 12px 18px;
+            border-radius: 14px;
+            width: fit-content;
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #FF4757;
+            font-size: 17px;
+        }
+
+        input[type="number"] {
+            width: 140px;
+            padding: 8px 12px;
+            border: 2px solid #CED6E0;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: #2F3542;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-blue);
+            background-color: #F0F8FF;
+        }
+
+        /* 提示与解析盒 */
+        .feedback-box {
+            display: none;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback-box.warning {
+            background-color: #FFF3CD;
+            border: 2px solid #FFEBAA;
+            color: #856404;
+        }
+
+        .feedback-box.success {
+            background-color: #D4EDDA;
+            border: 2px solid #C3E6CB;
+            color: #155724;
+        }
+
+        .feedback-box.error {
+            background-color: #F8D7DA;
+            border: 2px solid #F5C6CB;
+            color: #721C24;
+        }
+
+        /* 操作按鈕 */
+        .btn-container {
+            text-align: center;
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            font-family: 'ZCOOL KuaiLe', 'PingFang TC', cursive;
+            font-size: 19px;
+            padding: 12px 32px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 5px 0px rgba(0,0,0,0.2);
+        }
+
+        .btn-attack {
+            background: linear-gradient(135deg, #FF4757, #FF6B81);
+            box-shadow: 0 5px 0px #C0392B;
+        }
+
+        .btn-attack:hover { transform: translateY(-2px); }
+        .btn-attack:active { transform: translateY(3px); box-shadow: 0 2px 0px #C0392B; }
+
+        .btn-next {
+            background: linear-gradient(135deg, #2ED573, #11998E);
+            box-shadow: 0 5px 0px #1E90FF;
+            display: none;
+        }
+
+        .btn-next:hover { transform: translateY(-2px); }
+        .btn-next:active { transform: translateY(3px); box-shadow: 0 2px 0px #1E90FF; }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #54A0FF, #2E86DE);
+            box-shadow: 0 5px 0px #2F3542;
+        }
+
+        /* 最終通關大畫面 */
+        .victory-screen {
+            display: none;
+            text-align: center;
+            padding: 30px 15px;
+            animation: bounceIn 0.6s ease;
+        }
+
+        .victory-screen h2 {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 32px;
+            color: #2ED573;
+            margin-bottom: 10px;
+        }
+
+        .stars-container {
+            font-size: 45px;
+            color: #FFD166;
+            margin: 10px 0;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="container">
+    <!-- 頂部冒險標題 -->
+    <div class="header-box">
+        <h1><i class="fa-solid fa-dragon"></i> 二年級數學勇者大冒險 <i class="fa-solid fa-wand-magic-sparkles"></i></h1>
+        <div class="subtitle">⚔️ 一關一題 • 答對前進 • 擊敗數字大魔王！</div>
+    </div>
+
+    <!-- 怪獸血條 Dashboard -->
+    <div class="boss-dashboard">
+        <div class="boss-info">
+            <div class="boss-avatar" id="boss-avatar">👾</div>
+            <div style="text-align: left;">
+                <h3 id="boss-name" style="color: var(--primary-yellow); font-size: 19px;">大魔王：三位數字怪</h3>
+                <p style="font-size: 12px; color: #A4B0BE;">答對即可成功攻擊大魔王（扣減 5 HP）</p>
+            </div>
+            <div class="hp-bar-container">
+                <div class="hp-bar-fill" id="hp-bar"></div>
+                <div class="hp-text" id="hp-text">HP: 100 / 100</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 關卡主區域 (一頁一題) -->
+    <div id="game-screen">
+        <div class="stage-card" id="stage-card">
+            <div class="stage-header">
+                <span class="stage-badge" id="stage-num-badge">
+                    <i class="fa-solid fa-shield-halved"></i> 第 1 / 20 關
+                </span>
+                <span class="type-badge badge-add" id="stage-type-badge">
+                    <i class="fa-solid fa-plus-circle"></i> 進位加法
+                </span>
+            </div>
+
+            <div class="question-title" id="question-text">
+                加載題目中...
+            </div>
+
+            <div class="input-group">
+                <label for="user-input">答案：</label>
+                <input type="number" id="user-input" placeholder="輸入結果" autofocus />
+            </div>
+
+            <div class="feedback-box" id="feedback-box"></div>
+        </div>
+
+        <div class="btn-container">
+            <button type="button" class="btn btn-attack" id="attack-btn" onclick="submitAnswer()">
+                <i class="fa-solid fa-sword"></i> 發動攻擊
+            </button>
+            <button type="button" class="btn btn-next" id="next-btn" onclick="nextQuestion()">
+                進入下一關 <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 通關大勝利畫面 -->
+    <div class="victory-screen" id="victory-screen">
+        <h2>🎉 恭喜勇者！成功徹底消滅大魔王！</h2>
+        <div class="stars-container" id="stars-display">⭐⭐⭐⭐⭐</div>
+        <p id="final-stats" style="font-size: 20px; font-weight: bold; color: #2F3542; margin-top: 10px;"></p>
+        <p style="font-size: 16px; color: #57606F; margin-top: 8px;">你展現了超凡的算術智商，數字王國恢復了和平！</p>
+        
+        <div class="btn-container" style="margin-top: 30px;">
+            <button type="button" class="btn btn-reset" onclick="restartGame()">
+                <i class="fa-solid fa-rotate-right"></i> 重新開始大冒險
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questionsData = [
+        {
+            id: 1,
+            typeText: "進位加法",
+            badgeClass: "badge-add",
+            icon: "fa-plus-circle",
+            title: "學校圖書館上週借出故事書 185 本，這週借出 247 本。兩週一共借出故事書多少本？",
+            ans: 432,
+            calc: "185 + 247 = 432（本）"
+        },
+        {
+            id: 2,
+            typeText: "退位減法",
+            badgeClass: "badge-sub",
+            icon: "fa-minus-circle",
+            title: "農場裡養了 524 隻鴨子，養的雞比鴨子少 168 隻。農場裡養了多少隻雞？",
+            ans: 356,
+            calc: "524 - 168 = 356（隻）"
+        },
+        {
+            id: 3,
+            typeText: "三位數連加",
+            badgeClass: "badge-multi-add",
+            icon: "fa-layer-group",
+            title: "果園裡第一天摘了 126 筐蘋果，第二天摘了 158 筐，第三天摘了 214 筐。三天一共摘了多少筐蘋果？",
+            ans: 498,
+            calc: "126 + 158 + 214 = 498（筐）"
+        },
+        {
+            id: 4,
+            typeText: "三位數連減",
+            badgeClass: "badge-multi-sub",
+            icon: "fa-cubes-stacked",
+            title: "小明運來 600 塊磚頭，修花壇用了 245 塊，修鋪小路用了 188 塊。還剩下多少塊磚頭？",
+            ans: 167,
+            calc: "600 - 245 - 188 = 167（塊）"
+        },
+        {
+            id: 5,
+            typeText: "進位加法",
+            badgeClass: "badge-add",
+            icon: "fa-plus-circle",
+            title: "商場舉行促銷活動，一台風扇 268 元，一台電飯煲 355 元。買這兩樣電器一共需要多少元？",
+            ans: 623,
+            calc: "268 + 355 = 623（元）"
+        },
+        {
+            id: 6,
+            typeText: "退位減法",
+            badgeClass: "badge-sub",
+            icon: "fa-minus-circle",
+            title: "工廠計劃生產 810 個零件，已經生產了 435 個，還要生產多少個零件才能完成任務？",
+            ans: 375,
+            calc: "810 - 435 = 375（個）"
+        },
+        {
+            id: 7,
+            typeText: "三位數連加",
+            badgeClass: "badge-multi-add",
+            icon: "fa-layer-group",
+            title: "學校運動會上，一年級得 135 分，二年級得 168 分，三年級得 192 分。三個年級一共得多少分？",
+            ans: 495,
+            calc: "135 + 168 + 192 = 495（分）"
+        },
+        {
+            id: 8,
+            typeText: "三位數連減",
+            badgeClass: "badge-multi-sub",
+            icon: "fa-cubes-stacked",
+            title: "食堂運來 750 千克大米，第一週吃了 285 千克，第二週吃了 315 千克。還剩多少千克大米？",
+            ans: 150,
+            calc: "750 - 285 - 315 = 150（千克）"
+        },
+        {
+            id: 9,
+            typeText: "進位加法",
+            badgeClass: "badge-add",
+            icon: "fa-plus-circle",
+            title: "動物園裡有一頭大象重 485 千克，一頭小象重 347 千克。大象和小象一共重多少千克？",
+            ans: 832,
+            calc: "485 + 347 = 832（千克）"
+        },
+        {
+            id: 10,
+            typeText: "退位減法",
+            badgeClass: "badge-sub",
+            icon: "fa-minus-circle",
+            title: "某水庫水位最高時有 902 米，連續乾旱後水位下降了 185 米。現在水庫的水位是多少米？",
+            ans: 717,
+            calc: "902 - 185 = 717（米）"
+        },
+        {
+            id: 11,
+            typeText: "三位數連加",
+            badgeClass: "badge-multi-add",
+            icon: "fa-layer-group",
+            title: "科技館上午迎來了 248 名遊客，中午迎來了 175 名，下午迎來了 312 名。科技館全天一共迎來了多少名遊客？",
+            ans: 735,
+            calc: "248 + 175 + 312 = 735（名）"
+        },
+        {
+            id: 12,
+            typeText: "三位數連減",
+            badgeClass: "badge-multi-sub",
+            icon: "fa-cubes-stacked",
+            title: "商店進了 820 件衣服，第一天賣出 264 件，第二天賣出 358 件。還剩多少件衣服沒有賣出？",
+            ans: 198,
+            calc: "820 - 264 - 358 = 198（件）"
+        },
+        {
+            id: 13,
+            typeText: "進位加法",
+            badgeClass: "badge-add",
+            icon: "fa-plus-circle",
+            title: "植樹節那天，少先隊員種了 376 棵楊樹，445 棵柳樹。一共種了多少棵樹？",
+            ans: 821,
+            calc: "376 + 445 = 821（棵）"
+        },
+        {
+            id: 14,
+            typeText: "退位減法",
+            badgeClass: "badge-sub",
+            icon: "fa-minus-circle",
+            title: "建築工地運來 650 袋水泥，用去 388 袋後，還剩下多少袋水泥？",
+            ans: 262,
+            calc: "650 - 388 = 262（袋）"
+        },
+        {
+            id: 15,
+            typeText: "三位數連加",
+            badgeClass: "badge-multi-add",
+            icon: "fa-layer-group",
+            title: "快遞員小張三天一共送了多少件快遞？（已知第一天送了 189 件，第二天送了 205 件，第三天送了 236 件）",
+            ans: 630,
+            calc: "189 + 205 + 236 = 630（件）"
+        },
+        {
+            id: 16,
+            typeText: "三位數連減",
+            badgeClass: "badge-multi-sub",
+            icon: "fa-cubes-stacked",
+            title: "一本故事書共有 500 頁，小紅第一天看了 145 頁，第二天看了 178 頁。還有多少頁沒有看？",
+            ans: 177,
+            calc: "500 - 145 - 178 = 177（頁）"
+        },
+        {
+            id: 17,
+            typeText: "進位加法",
+            badgeClass: "badge-add",
+            icon: "fa-plus-circle",
+            title: "小華家到學校有 468 米，從學校到少年宮有 385 米。小華從家經過學校再到少年宮，一共要走多少米？",
+            ans: 853,
+            calc: "468 + 385 = 853（米）"
+        },
+        {
+            id: 18,
+            typeText: "退位減法",
+            badgeClass: "badge-sub",
+            icon: "fa-minus-circle",
+            title: "超市運來 712 箱牛奶，賣出一些後還剩 256 箱。超市賣出了多少箱牛奶？",
+            ans: 456,
+            calc: "712 - 256 = 456（箱）"
+        },
+        {
+            id: 19,
+            typeText: "三位數連加",
+            badgeClass: "badge-multi-add",
+            icon: "fa-layer-group",
+            title: "班級圖書角有科技書 118 本，故事書 245 本，連環畫 162 本。圖書角一共有圖書多少本？",
+            ans: 525,
+            calc: "118 + 245 + 162 = 525（本）"
+        },
+        {
+            id: 20,
+            typeText: "三位數連減",
+            badgeClass: "badge-multi-sub",
+            icon: "fa-cubes-stacked",
+            title: "水果店運來 900 千克西瓜，上午賣出 342 千克，下午賣出 429 千克。還剩多少千克西瓜？",
+            ans: 129,
+            calc: "900 - 342 - 429 = 129（千克）"
+        }
+    ];
+
+    let currentIndex = 0;
+    let attemptsCount = 0; // 当前题目的尝试次数
+    let currentHP = 100;
+    let firstTryCorrectCount = 0; // 一次性答对的数量统计
+
+    // 加载当前关卡
+    function loadStage() {
+        const q = questionsData[currentIndex];
+        attemptsCount = 0;
+
+        // 更新关卡 UI
+        document.getElementById('stage-num-badge').innerHTML = `<i class="fa-solid fa-shield-halved"></i> 第 ${currentIndex + 1} / ${questionsData.length} 關`;
+        
+        const typeBadge = document.getElementById('stage-type-badge');
+        typeBadge.className = `type-badge ${q.badgeClass}`;
+        typeBadge.innerHTML = `<i class="fa-solid ${q.icon}"></i> ${q.typeText}`;
+
+        document.getElementById('question-text').innerText = q.title;
+        
+        // 清空输入框与反馈
+        const input = document.getElementById('user-input');
+        input.value = '';
+        input.disabled = false;
+        input.focus();
+
+        const feedback = document.getElementById('feedback-box');
+        feedback.style.display = 'none';
+        feedback.className = 'feedback-box';
+
+        // 按钮控制
+        document.getElementById('attack-btn').style.display = 'inline-flex';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    // 提交答案判定
+    function submitAnswer() {
+        const q = questionsData[currentIndex];
+        const input = document.getElementById('user-input');
+        const feedback = document.getElementById('feedback-box');
+        const val = input.value.trim();
+
+        if (val === '') {
+            alert('請先輸入答案再發動攻擊哦！');
+            return;
+        }
+
+        const userAns = parseInt(val, 10);
+        attemptsCount++;
+
+        if (userAns === q.ans) {
+            // 答对
+            if (attemptsCount === 1) {
+                firstTryCorrectCount++;
+            }
+            
+            // 扣除怪兽 5 点 HP
+            currentHP = Math.max(0, currentHP - 5);
+            updateBossHP();
+
+            feedback.className = 'feedback-box success';
+            feedback.innerHTML = `🎉 <b>攻擊成功！</b> 答對了！大魔王受到了 5 點傷害！<br>💡 正確算式：${q.calc}`;
+            feedback.style.display = 'block';
+
+            input.disabled = true;
+            document.getElementById('attack-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'inline-flex';
+
+        } else {
+            // 答错
+            if (attemptsCount === 1) {
+                // 第一次答错：允许补答一次
+                feedback.className = 'feedback-box warning';
+                feedback.innerHTML = `⚠️ <b>攻擊偏了！</b> 算得不太對哦，大魔王嘲笑了你一下。還有 <b>1 次補答機會</b>，再仔細算算！`;
+                feedback.style.display = 'block';
+                input.focus();
+                input.select();
+            } else {
+                // 第二次答错：展示正确答案与解析，允许进入下一关
+                feedback.className = 'feedback-box error';
+                feedback.innerHTML = `❌ <b>攻擊失敗！</b> 沒關係，吸取教訓！<br>💡 <b>正確算式與答案：</b> ${q.calc}`;
+                feedback.style.display = 'block';
+
+                input.disabled = true;
+                document.getElementById('attack-btn').style.display = 'none';
+                document.getElementById('next-btn').style.display = 'inline-flex';
+            }
+        }
+    }
+
+    // 进入下一关
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < questionsData.length) {
+            loadStage();
+        } else {
+            showVictoryScreen();
+        }
+    }
+
+    // 更新怪兽 UI
+    function updateBossHP() {
+        const hpBar = document.getElementById('hp-bar');
+        const hpText = document.getElementById('hp-text');
+        const bossAvatar = document.getElementById('boss-avatar');
+        const bossName = document.getElementById('boss-name');
+
+        hpBar.style.width = `${currentHP}%`;
+        hpText.innerText = `HP: ${currentHP} / 100`;
+
+        if (currentHP === 0) {
+            bossAvatar.innerText = "😵";
+            bossName.innerText = "大魔王：已被徹底擊敗！";
+            hpBar.style.background = "#A4B0BE";
+        } else if (currentHP <= 30) {
+            bossAvatar.innerText = "😡";
+            bossName.innerText = "大魔王：殘血暴走中！";
+        } else if (currentHP <= 60) {
+            bossAvatar.innerText = "😰";
+            bossName.innerText = "大魔王：快要支撐不住了！";
+        } else {
+            bossAvatar.innerText = "👾";
+            bossName.innerText = "大魔王：三位數字怪";
+        }
+    }
+
+    // 展现最终胜利通关画面
+    function showVictoryScreen() {
+        document.getElementById('game-screen').style.display = 'none';
+        const victoryScreen = document.getElementById('victory-screen');
+        const starsDisplay = document.getElementById('stars-display');
+        const stats = document.getElementById('final-stats');
+
+        stats.innerText = `你一共完成了 ${questionsData.length} 個關卡，其中 ${firstTryCorrectCount} 題一次性完美答對！`;
+
+        if (firstTryCorrectCount === 20) {
+            starsDisplay.innerText = "⭐⭐⭐⭐⭐";
+        } else if (firstTryCorrectCount >= 15) {
+            starsDisplay.innerText = "⭐⭐⭐⭐☆";
+        } else if (firstTryCorrectCount >= 10) {
+            starsDisplay.innerText = "⭐⭐⭐☆☆";
+        } else {
+            starsDisplay.innerText = "⭐⭐☆☆☆";
+        }
+
+        victoryScreen.style.display = 'block';
+        triggerConfetti();
+    }
+
+    // 重新开始游戏
+    function restartGame() {
+        currentIndex = 0;
+        currentHP = 100;
+        firstTryCorrectCount = 0;
+
+        updateBossHP();
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('victory-screen').style.display = 'none';
+
+        loadStage();
+    }
+
+    // 胜利礼花动画
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const pieces = [];
+        const colors = ['#FFD166', '#FF9F1C', '#FF4757', '#54A0FF', '#2ED573', '#FFC6FF'];
+
+        for (let i = 0; i < 100; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                size: Math.random() * 10 + 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 2,
+                angle: Math.random() * 6.28
+            });
+        }
+
+        let frame = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.y += p.speed;
+                p.angle += 0.05;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+
+            frame++;
+            if (frame < 180) {
+                requestAnimationFrame(animate);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        animate();
+    }
+
+    // 绑定回车键快捷提交
+    document.getElementById('user-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const attackBtn = document.getElementById('attack-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (attackBtn.style.display !== 'none') {
+                submitAnswer();
+            } else if (nextBtn.style.display !== 'none') {
+                nextQuestion();
+            }
+        }
+    });
+
+    window.onload = loadStage;
+</script>
+</body>
+</html>
+```eof
