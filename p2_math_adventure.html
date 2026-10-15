@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>喵喵數學大冒險 - P.2 Math Adventure</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 40%, #fce7f3 100%);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      border: 4px solid #f472b6;
+    }
+
+    .active-slot {
+      border-color: #f59e0b !important;
+      background-color: #fef3c7 !important;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    .key-btn {
+      transition: all 0.08s ease;
+      touch-action: manipulation;
+    }
+    .key-btn:active {
+      transform: scale(0.92);
+    }
+
+    @keyframes smoke {
+      0% { transform: translate(0, 0) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-22px, -28px) scale(1.5); opacity: 0; }
+    }
+    .smoke-puff {
+      animation: smoke 2s infinite linear;
+    }
+
+    .train-container {
+      display: flex;
+      align-items: flex-end;
+      overflow-x: auto;
+      padding: 12px 6px;
+      scrollbar-width: thin;
+    }
+
+    .train-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    .train-container::-webkit-scrollbar-thumb {
+      background-color: #f472b6;
+      border-radius: 9999px;
+    }
+
+    .stage-badge-active {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+      border-color: #d97706 !important;
+      transform: scale(1.05);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .stage-badge-done {
+      background-color: #10b981 !important;
+      color: #ffffff !important;
+      border-color: #059669 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 text-slate-800">
+
+  <!-- Header Navigation Bar -->
+  <header class="bg-pink-500 text-white shadow-md sticky top-0 z-40 border-b-4 border-pink-600">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <span class="text-3xl animate-bounce">🐱</span>
+        <div>
+          <h1 class="text-lg sm:text-xl font-black tracking-wide">喵喵數學大冒險</h1>
+          <div class="text-[11px] text-pink-100 font-bold">小二數學關卡挑戰</div>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="bg-pink-600/90 border border-pink-300 px-3.5 py-1 rounded-full text-yellow-300 font-bold flex items-center gap-1.5 text-xs sm:text-sm shadow-inner">
+          <span>🐾 得分:</span>
+          <span id="score-display" class="text-base sm:text-lg font-black text-yellow-300">0</span>
+        </div>
+        <button id="sound-toggle" onclick="toggleSound()" class="bg-pink-400 hover:bg-pink-300 p-2 rounded-full text-base shadow active:scale-90 transition">
+          🔊
+        </button>
+      </div>
+    </div>
+    
+    <!-- Stage Progress Track Bar -->
+    <div class="bg-pink-700/90 px-2 py-2 border-t border-pink-400/50">
+      <div class="max-w-4xl mx-auto flex justify-between items-center gap-1 sm:gap-2">
+        <!-- Stage Badges -->
+        <div id="stage-badge-A" class="flex-1 text-center py-1 px-1 rounded-xl bg-pink-600 border border-pink-400 text-pink-200 text-[10px] sm:text-xs font-black transition-all">
+          Stage A 🧮
+        </div>
+        <span class="text-pink-300 text-xs">➔</span>
+        <div id="stage-badge-B" class="flex-1 text-center py-1 px-1 rounded-xl bg-pink-600 border border-pink-400 text-pink-200 text-[10px] sm:text-xs font-black transition-all">
+          Stage B 🔢
+        </div>
+        <span class="text-pink-300 text-xs">➔</span>
+        <div id="stage-badge-C" class="flex-1 text-center py-1 px-1 rounded-xl bg-pink-600 border border-pink-400 text-pink-200 text-[10px] sm:text-xs font-black transition-all">
+          Stage C 📐
+        </div>
+        <span class="text-pink-300 text-xs">➔</span>
+        <div id="stage-badge-D" class="flex-1 text-center py-1 px-1 rounded-xl bg-pink-600 border border-pink-400 text-pink-200 text-[10px] sm:text-xs font-black transition-all">
+          Stage D 🚂
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Question Counter & Progress Bar Header -->
+  <div id="stage-progress-header" class="max-w-4xl mx-auto px-4 mt-3">
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-2.5 border-2 border-pink-300 shadow-sm flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span id="stage-title-text" class="font-black text-pink-700 text-xs sm:text-sm">Stage A: 珠串與三位數</span>
+        <span class="text-slate-300">|</span>
+        <span id="question-count-text" class="font-black text-purple-700 text-xs sm:text-sm">第 1 / 6 題</span>
+      </div>
+      <!-- Progress Bar Graphic -->
+      <div class="w-28 sm:w-44 bg-slate-200 h-3 rounded-full overflow-hidden border border-slate-300">
+        <div id="stage-progress-fill" class="bg-gradient-to-r from-amber-400 to-pink-500 h-full w-1/6 transition-all duration-300"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Game Workspace -->
+  <main class="max-w-4xl mx-auto px-3 sm:px-4 mt-3">
+
+    <!-- ================= STAGE A ================= -->
+    <section id="part-A" class="space-y-4 sm:space-y-6">
+      <div class="game-card rounded-3xl p-4 sm:p-6 relative">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-lg sm:text-2xl font-black text-pink-700 flex items-center gap-2">
+            <span>🧮</span> <span>Stage A: 珠串與三位數</span>
+          </h2>
+          <span id="partA-type-badge" class="text-xs sm:text-sm bg-purple-100 text-purple-800 font-black px-3 py-1 rounded-full border border-purple-300">
+            看圖寫數與位值 📖
+          </span>
+        </div>
+
+        <!-- Dynamic SVG Abacus Display -->
+        <div class="bg-amber-50/80 rounded-2xl p-3 sm:p-4 border-2 border-amber-200 flex flex-col items-center shadow-inner">
+          <div id="target-number-prompt" class="hidden mb-2 text-base sm:text-xl font-black text-purple-900 bg-purple-100 px-4 py-1.5 rounded-full border border-purple-300 shadow-sm">
+            🐱 喵喵請你撥出數字：<span id="target-num-text" class="text-xl sm:text-2xl text-rose-600 font-black">485</span>
+          </div>
+
+          <svg id="abacus-svg" viewBox="0 0 300 170" class="w-full max-w-xs h-36 sm:h-44 drop-shadow">
+            <!-- Abacus Wood Frame -->
+            <rect x="20" y="15" width="260" height="140" rx="10" fill="#8B4513" stroke="#5c2d0c" stroke-width="4"/>
+            <rect x="30" y="25" width="240" height="120" fill="#FFF8DC"/>
+            
+            <!-- Metallic Rods -->
+            <line x1="70" y1="25" x2="70" y2="145" stroke="#94a3b8" stroke-width="5"/>
+            <line x1="150" y1="25" x2="150" y2="145" stroke="#94a3b8" stroke-width="5"/>
+            <line x1="230" y1="25" x2="230" y2="145" stroke="#94a3b8" stroke-width="5"/>
+
+            <!-- Column Labels -->
+            <rect x="45" y="146" width="50" height="18" rx="4" fill="#f43f5e" />
+            <text x="70" y="159" text-anchor="middle" font-weight="900" fill="#ffffff" font-size="11">百位</text>
+
+            <rect x="125" y="146" width="50" height="18" rx="4" fill="#0D9488" />
+            <text x="150" y="159" text-anchor="middle" font-weight="900" fill="#ffffff" font-size="11">十位</text>
+
+            <rect x="205" y="146" width="50" height="18" rx="4" fill="#ea580c" />
+            <text x="230" y="159" text-anchor="middle" font-weight="900" fill="#ffffff" font-size="11">個位</text>
+
+            <!-- Dynamic Beads Containers -->
+            <g id="beads-hundreds"></g>
+            <g id="beads-tens"></g>
+            <g id="beads-ones"></g>
+          </svg>
+
+          <!-- Interactive Bead Controls (Only Active for Type 2: 看數撥珠) -->
+          <div id="bead-controls" class="hidden flex justify-around w-full max-w-xs mt-3">
+            <div class="flex gap-1.5 items-center bg-rose-50 p-1.5 rounded-xl border border-rose-200">
+              <button onclick="changeBead('h', -1)" class="w-8 h-8 bg-rose-200 text-rose-900 rounded-lg font-black text-base shadow active:scale-90">-</button>
+              <span id="bead-count-h" class="font-black text-rose-900 w-5 text-center text-lg">0</span>
+              <button onclick="changeBead('h', 1)" class="w-8 h-8 bg-rose-500 text-white rounded-lg font-black text-base shadow active:scale-90">+</button>
+            </div>
+            <div class="flex gap-1.5 items-center bg-teal-50 p-1.5 rounded-xl border border-teal-200">
+              <button onclick="changeBead('t', -1)" class="w-8 h-8 bg-teal-200 text-teal-900 rounded-lg font-black text-base shadow active:scale-90">-</button>
+              <span id="bead-count-t" class="font-black text-teal-900 w-5 text-center text-lg">0</span>
+              <button onclick="changeBead('t', 1)" class="w-8 h-8 bg-teal-500 text-white rounded-lg font-black text-base shadow active:scale-90">+</button>
+            </div>
+            <div class="flex gap-1.5 items-center bg-orange-50 p-1.5 rounded-xl border border-orange-200">
+              <button onclick="changeBead('o', -1)" class="w-8 h-8 bg-orange-200 text-orange-900 rounded-lg font-black text-base shadow active:scale-90">-</button>
+              <span id="bead-count-o" class="font-black text-orange-900 w-5 text-center text-lg">0</span>
+              <button onclick="changeBead('o', 1)" class="w-8 h-8 bg-orange-500 text-white rounded-lg font-black text-base shadow active:scale-90">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Form Fields -->
+        <div class="mt-4 sm:mt-6 space-y-4">
+          
+          <!-- Type 1 Only: 寫作 & 讀作 (Completely Blank Inputs) -->
+          <div id="section-read-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-amber-50/90 p-3 rounded-2xl border-2 border-amber-300">
+              <label class="block text-amber-950 font-bold mb-1 text-xs sm:text-sm">寫作（阿拉伯數字）：</label>
+              <div id="input-write-arabic" onclick="setActiveSlot('write-arabic', 'num')" class="bg-white border-2 border-amber-400 rounded-xl p-2 text-lg sm:text-xl font-black text-center h-10 sm:h-12 flex items-center justify-center cursor-pointer shadow-inner"></div>
+            </div>
+            <div class="bg-amber-50/90 p-3 rounded-2xl border-2 border-amber-300">
+              <label class="block text-amber-950 font-bold mb-1 text-xs sm:text-sm">讀作（中國數字）：</label>
+              <div id="input-write-chinese" onclick="setActiveSlot('write-chinese', 'cn')" class="bg-white border-2 border-amber-400 rounded-xl p-2 text-lg sm:text-xl font-black text-center h-10 sm:h-12 flex items-center justify-center cursor-pointer shadow-inner"></div>
+            </div>
+          </div>
+
+          <!-- ① 位值表示 (All inputs completely blank) -->
+          <div class="bg-sky-50 p-4 rounded-2xl border-2 border-sky-300">
+            <span class="font-black text-sky-950 text-base sm:text-lg block mb-3 flex items-center gap-1">
+              <span>①</span> <span>位值表示：</span>
+            </span>
+            <div class="space-y-3 text-sm sm:text-base font-bold text-slate-800">
+              <!-- Hundreds Row -->
+              <div class="flex items-center gap-2 flex-wrap bg-white p-2.5 rounded-xl border border-sky-200 shadow-sm">
+                <div id="input-digit-h" onclick="setActiveSlot('digit-h', 'num')" class="inline-flex bg-white border-2 border-rose-400 rounded-xl w-12 sm:w-14 h-10 items-center justify-center text-lg font-black text-rose-700 cursor-pointer shadow-inner hover:bg-rose-50 transition"></div>
+                <span class="text-slate-700">在百位，表示</span>
+                <div id="input-val-h" onclick="setActiveSlot('val-h', 'num')" class="inline-flex bg-white border-2 border-rose-400 rounded-xl px-3 h-10 min-w-[80px] items-center justify-center text-lg font-black text-rose-700 cursor-pointer shadow-inner hover:bg-rose-50 transition"></div>
+              </div>
+              <!-- Tens Row -->
+              <div class="flex items-center gap-2 flex-wrap bg-white p-2.5 rounded-xl border border-sky-200 shadow-sm">
+                <div id="input-digit-t" onclick="setActiveSlot('digit-t', 'num')" class="inline-flex bg-white border-2 border-teal-400 rounded-xl w-12 sm:w-14 h-10 items-center justify-center text-lg font-black text-teal-700 cursor-pointer shadow-inner hover:bg-teal-50 transition"></div>
+                <span class="text-slate-700">在十位，表示</span>
+                <div id="input-val-t" onclick="setActiveSlot('val-t', 'num')" class="inline-flex bg-white border-2 border-teal-400 rounded-xl px-3 h-10 min-w-[80px] items-center justify-center text-lg font-black text-teal-700 cursor-pointer shadow-inner hover:bg-teal-50 transition"></div>
+              </div>
+              <!-- Ones Row -->
+              <div class="flex items-center gap-2 flex-wrap bg-white p-2.5 rounded-xl border border-sky-200 shadow-sm">
+                <div id="input-digit-o" onclick="setActiveSlot('digit-o', 'num')" class="inline-flex bg-white border-2 border-orange-400 rounded-xl w-12 sm:w-14 h-10 items-center justify-center text-lg font-black text-orange-700 cursor-pointer shadow-inner hover:bg-orange-50 transition"></div>
+                <span class="text-slate-700">在個位，表示</span>
+                <div id="input-val-o" onclick="setActiveSlot('val-o', 'num')" class="inline-flex bg-white border-2 border-orange-400 rounded-xl px-3 h-10 min-w-[80px] items-center justify-center text-lg font-black text-orange-700 cursor-pointer shadow-inner hover:bg-orange-50 transition"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② 分解位值算式 (All inputs completely blank) -->
+          <div class="bg-purple-50 p-4 rounded-2xl border-2 border-purple-300">
+            <span class="font-black text-purple-950 text-base sm:text-lg block mb-2 flex items-center gap-1">
+              <span>②</span> <span>分解位值算式：</span>
+            </span>
+            <div class="flex items-center justify-center flex-wrap gap-2 text-base sm:text-lg font-bold text-slate-800 bg-white p-3 rounded-xl border border-purple-200 shadow-sm">
+              <div id="input-exp-total" onclick="setActiveSlot('exp-total', 'num')" class="bg-white border-2 border-purple-400 rounded-xl w-20 sm:w-24 h-10 flex items-center justify-center text-lg font-black text-purple-800 cursor-pointer shadow-inner hover:bg-purple-50"></div>
+              <span class="text-xl font-black text-purple-900">= (</span>
+              <div id="input-exp-h" onclick="setActiveSlot('exp-h', 'num')" class="bg-white border-2 border-purple-400 rounded-xl w-20 sm:w-24 h-10 flex items-center justify-center text-lg font-black text-purple-700 cursor-pointer shadow-inner hover:bg-purple-50"></div>
+              <span class="text-xl font-black text-purple-900">) + (</span>
+              <div id="input-exp-t" onclick="setActiveSlot('exp-t', 'num')" class="bg-white border-2 border-purple-400 rounded-xl w-16 sm:w-20 h-10 flex items-center justify-center text-lg font-black text-purple-700 cursor-pointer shadow-inner hover:bg-purple-50"></div>
+              <span class="text-xl font-black text-purple-900">) + (</span>
+              <div id="input-exp-o" onclick="setActiveSlot('exp-o', 'num')" class="bg-white border-2 border-purple-400 rounded-xl w-14 sm:w-16 h-10 flex items-center justify-center text-lg font-black text-purple-700 cursor-pointer shadow-inner hover:bg-purple-50"></div>
+              <span class="text-xl font-black text-purple-900">)</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6 flex justify-center">
+          <button onclick="checkStageA()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-base sm:text-lg px-8 py-3.5 rounded-2xl shadow-lg active:scale-95 transition flex items-center gap-2">
+            <span>喵喵確認答案</span> <span>✅</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STAGE B ================= -->
+    <section id="part-B" class="hidden space-y-4 sm:space-y-6">
+      <div class="game-card rounded-3xl p-5 sm:p-6 text-center">
+        <h2 class="text-lg sm:text-2xl font-black text-pink-800 mb-2 flex items-center justify-center gap-2">
+          <span>🔢</span> <span>Stage B: 三位數比較</span>
+        </h2>
+        
+        <div id="b-prompt" class="text-base sm:text-xl font-black text-purple-900 bg-purple-100 py-2.5 px-4 rounded-2xl border border-purple-200 my-3">
+          請將下列各組數【由小至大】排列：
+        </div>
+
+        <!-- Number Cards -->
+        <div class="grid grid-cols-3 gap-3 my-4 max-w-lg mx-auto">
+          <div onclick="clickNumCard(0)" id="num-card-0" class="bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 rounded-2xl p-3 sm:p-4 cursor-pointer hover:scale-105 transition shadow text-xl sm:text-3xl font-black text-amber-950">
+            361
+          </div>
+          <div onclick="clickNumCard(1)" id="num-card-1" class="bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-400 rounded-2xl p-3 sm:p-4 cursor-pointer hover:scale-105 transition shadow text-xl sm:text-3xl font-black text-emerald-950">
+            631
+          </div>
+          <div onclick="clickNumCard(2)" id="num-card-2" class="bg-purple-100 hover:bg-purple-200 border-2 border-purple-400 rounded-2xl p-3 sm:p-4 cursor-pointer hover:scale-105 transition shadow text-xl sm:text-3xl font-black text-purple-950">
+            163
+          </div>
+        </div>
+
+        <!-- Ordered Slot Output Area -->
+        <div class="bg-indigo-50/90 p-4 rounded-2xl border border-indigo-200 my-4 shadow-inner">
+          <div class="text-xs sm:text-sm font-bold text-indigo-900 mb-3">（點擊上方數字卡片填入下方位置）</div>
+          <div class="flex justify-center items-center gap-2 sm:gap-4 text-xl sm:text-2xl font-black text-indigo-950">
+            <div id="slot-b-1" class="w-20 sm:w-28 h-12 sm:h-14 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-lg sm:text-2xl font-black text-amber-900 shadow"></div>
+            <span id="b-sym-1" class="font-black text-indigo-700 text-2xl">&lt;</span>
+            <div id="slot-b-2" class="w-20 sm:w-28 h-12 sm:h-14 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-lg sm:text-2xl font-black text-amber-900 shadow"></div>
+            <span id="b-sym-2" class="font-black text-indigo-700 text-2xl">&lt;</span>
+            <div id="slot-b-3" class="w-20 sm:w-28 h-12 sm:h-14 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-lg sm:text-2xl font-black text-amber-900 shadow"></div>
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-3">
+          <button onclick="resetBOrder()" class="bg-slate-300 hover:bg-slate-400 text-slate-800 font-black px-4 py-3 rounded-2xl text-xs sm:text-sm">重新排序 🔄</button>
+          <button onclick="checkStageB()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-8 py-3 rounded-2xl text-sm sm:text-base shadow-lg">喵喵確認答案 ✅</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STAGE C (100% RELIABLE HTML DIV SVG WRAPPERS) ================= -->
+    <section id="part-C" class="hidden space-y-4 sm:space-y-6">
+      
+      <!-- C1: Count Shape Angles -->
+      <div id="box-C1" class="game-card rounded-3xl p-5 sm:p-6 text-center">
+        <h2 class="text-base sm:text-xl font-black text-pink-800 mb-1">🐱 請觀察圖形，數數看圖中有多少隻角？</h2>
+        <p class="text-xs text-slate-500 font-bold mb-3">（注意：圓形、橢圓形或圓滑曲線是沒有角的喔！）</p>
+        
+        <div class="bg-sky-50 rounded-2xl p-4 my-3 flex justify-center items-center border-2 border-sky-200 shadow-inner min-h-[180px]">
+          <!-- Wrapper container for dynamic SVG replacement -->
+          <div id="shape-c1-wrapper" class="w-full flex justify-center items-center"></div>
+        </div>
+
+        <div class="flex items-center justify-center gap-2">
+          <span class="font-bold text-sm sm:text-base text-slate-800">圖中有：</span>
+          <div id="input-shape-angles" onclick="setActiveSlot('shape-angles', 'num')" class="bg-white border-2 border-emerald-500 rounded-xl w-20 h-10 flex items-center justify-center text-xl font-black text-emerald-700 cursor-pointer shadow-inner"></div>
+          <span class="font-bold text-sm sm:text-base text-slate-800">隻角</span>
+        </div>
+
+        <div class="mt-5 flex justify-center">
+          <button onclick="checkStageC1()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-base px-8 py-3 rounded-2xl shadow-lg active:scale-95">喵喵確認答案 ✅</button>
+        </div>
+      </div>
+
+      <!-- C2: Compare Angle Sizes -->
+      <div id="box-C2" class="hidden game-card rounded-3xl p-5 sm:p-6 text-center">
+        <h2 id="c2-order-prompt" class="text-base sm:text-xl font-black text-purple-900 mb-3 bg-purple-100 py-2 rounded-2xl border border-purple-200">
+          請將下列 3 隻角按【由大至小】排列：
+        </h2>
+        
+        <!-- Angle Cards A, B, C -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 my-3 max-w-md mx-auto">
+          <div onclick="clickAngleCard('A')" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-2 cursor-pointer hover:scale-105 transition shadow flex flex-col items-center">
+            <span class="bg-amber-500 text-white font-black px-2.5 py-0.5 rounded-full text-xs">角 A</span>
+            <div id="angle-A-wrapper" class="w-full mt-1"></div>
+          </div>
+          <div onclick="clickAngleCard('B')" class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-2 cursor-pointer hover:scale-105 transition shadow flex flex-col items-center">
+            <span class="bg-emerald-500 text-white font-black px-2.5 py-0.5 rounded-full text-xs">角 B</span>
+            <div id="angle-B-wrapper" class="w-full mt-1"></div>
+          </div>
+          <div onclick="clickAngleCard('C')" class="bg-purple-50 border-2 border-purple-300 rounded-2xl p-2 cursor-pointer hover:scale-105 transition shadow flex flex-col items-center">
+            <span class="bg-purple-500 text-white font-black px-2.5 py-0.5 rounded-full text-xs">角 C</span>
+            <div id="angle-C-wrapper" class="w-full mt-1"></div>
+          </div>
+        </div>
+
+        <!-- Ordered Answer Slots -->
+        <div class="bg-indigo-50/80 p-3 rounded-2xl border border-indigo-200 my-3 max-w-md mx-auto">
+          <div class="text-xs font-bold text-indigo-900 mb-2">（點擊上方角 A, B, C 圖案填入下方順序）</div>
+          <div class="flex justify-center items-center gap-2 text-base sm:text-lg font-black text-indigo-950">
+            <div id="slot-c2-1" class="w-16 sm:w-20 h-12 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-sm sm:text-base font-black text-amber-900 shadow-inner"></div>
+            <span id="c2-sym-1" class="font-black text-indigo-700 text-xl">&gt;</span>
+            <div id="slot-c2-2" class="w-16 sm:w-20 h-12 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-sm sm:text-base font-black text-amber-900 shadow-inner"></div>
+            <span id="c2-sym-2" class="font-black text-indigo-700 text-xl">&gt;</span>
+            <div id="slot-c2-3" class="w-16 sm:w-20 h-12 bg-white border-2 border-amber-400 rounded-xl flex items-center justify-center text-sm sm:text-base font-black text-amber-900 shadow-inner"></div>
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-3">
+          <button onclick="resetC2Order()" class="bg-slate-300 hover:bg-slate-400 text-slate-800 font-black px-4 py-2.5 rounded-xl text-xs sm:text-sm">重新排序 🔄</button>
+          <button onclick="checkStageC2()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6 py-2.5 rounded-xl text-sm shadow">喵喵確認答案 ✅</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STAGE D ================= -->
+    <section id="part-D" class="hidden space-y-4 sm:space-y-6">
+      <div class="game-card rounded-3xl p-4 sm:p-6">
+        <h2 class="text-base sm:text-2xl font-black text-pink-800 mb-1 flex items-center gap-2">
+          <span>🚂</span> <span>Stage D: 喵喵火車規律</span>
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-600 font-bold mb-3">觀察喵喵彩虹火車，點擊 [ ? ] 車廂並填寫缺少的數字：</p>
+
+        <!-- FLEXBOX CARTOON STEAM TRAIN -->
+        <div class="bg-gradient-to-b from-sky-200 via-indigo-50 to-emerald-100 rounded-2xl p-3 border-2 border-sky-300 relative overflow-hidden shadow-inner">
+          <div class="train-container items-end">
+            <!-- LOCOMOTIVE ENGINE -->
+            <div class="flex-shrink-0 flex flex-col items-center mr-1 relative">
+              <div class="smoke-puff text-lg absolute -top-5 left-3">💨</div>
+              <div class="bg-rose-500 border-2 border-rose-700 rounded-t-2xl w-22 h-18 relative flex flex-col justify-between p-1 shadow">
+                <div class="bg-amber-300 w-6 h-6 rounded-full border border-amber-500 flex items-center justify-center text-xs shadow">🐱</div>
+                <div class="bg-rose-800 h-3.5 rounded w-full flex items-center justify-center text-white text-[9px] font-bold">喵喵車長</div>
+              </div>
+              <div class="flex justify-between w-18 -mt-2 z-10 gap-1">
+                <div class="w-5 h-5 bg-slate-800 rounded-full border-2 border-slate-300"></div>
+                <div class="w-5 h-5 bg-slate-800 rounded-full border-2 border-slate-300"></div>
+              </div>
+            </div>
+
+            <!-- 5 CARRIAGES -->
+            <div class="flex items-end space-x-2">
+              <!-- Carriage 1 -->
+              <div onclick="setActiveTrainCarriage(0)" id="train-car-0" class="flex-shrink-0 cursor-pointer">
+                <div class="bg-orange-500 border-2 border-orange-600 rounded-xl w-22 sm:w-24 h-16 flex flex-col items-center justify-center p-1 shadow">
+                  <span class="text-[9px] font-black text-white bg-orange-700 px-1.5 rounded">1號車廂</span>
+                  <div id="train-val-0" class="text-base sm:text-lg font-black text-slate-900 bg-white w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 border border-orange-300"></div>
+                </div>
+                <div class="flex justify-between px-2 -mt-2">
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                </div>
+              </div>
+
+              <!-- Carriage 2 -->
+              <div onclick="setActiveTrainCarriage(1)" id="train-car-1" class="flex-shrink-0 cursor-pointer">
+                <div class="bg-teal-500 border-2 border-teal-600 rounded-xl w-22 sm:w-24 h-16 flex flex-col items-center justify-center p-1 shadow">
+                  <span class="text-[9px] font-black text-white bg-teal-700 px-1.5 rounded">2號車廂</span>
+                  <div id="train-val-1" class="text-base sm:text-lg font-black text-slate-900 bg-white w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 border border-teal-300"></div>
+                </div>
+                <div class="flex justify-between px-2 -mt-2">
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                </div>
+              </div>
+
+              <!-- Carriage 3 -->
+              <div onclick="setActiveTrainCarriage(2)" id="train-car-2" class="flex-shrink-0 cursor-pointer">
+                <div class="bg-purple-500 border-2 border-purple-600 rounded-xl w-22 sm:w-24 h-16 flex flex-col items-center justify-center p-1 shadow">
+                  <span class="text-[9px] font-black text-white bg-purple-700 px-1.5 rounded">3號車廂</span>
+                  <div id="train-val-2" class="text-base sm:text-lg font-black text-slate-900 bg-white w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 border border-purple-300"></div>
+                </div>
+                <div class="flex justify-between px-2 -mt-2">
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                </div>
+              </div>
+
+              <!-- Carriage 4 -->
+              <div onclick="setActiveTrainCarriage(3)" id="train-car-3" class="flex-shrink-0 cursor-pointer">
+                <div class="bg-emerald-500 border-2 border-emerald-600 rounded-xl w-22 sm:w-24 h-16 flex flex-col items-center justify-center p-1 shadow">
+                  <span class="text-[9px] font-black text-white bg-emerald-700 px-1.5 rounded">4號車廂</span>
+                  <div id="train-val-3" class="text-base sm:text-lg font-black text-slate-900 bg-white w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 border border-emerald-300"></div>
+                </div>
+                <div class="flex justify-between px-2 -mt-2">
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                </div>
+              </div>
+
+              <!-- Carriage 5 -->
+              <div onclick="setActiveTrainCarriage(4)" id="train-car-4" class="flex-shrink-0 cursor-pointer">
+                <div class="bg-pink-500 border-2 border-pink-600 rounded-xl w-22 sm:w-24 h-16 flex flex-col items-center justify-center p-1 shadow">
+                  <span class="text-[9px] font-black text-white bg-pink-700 px-1.5 rounded">5號車廂</span>
+                  <div id="train-val-4" class="text-base sm:text-lg font-black text-slate-900 bg-white w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 border border-pink-300"></div>
+                </div>
+                <div class="flex justify-between px-2 -mt-2">
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                  <div class="w-4 h-4 bg-slate-800 rounded-full border border-slate-300"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Track -->
+          <div class="h-2.5 bg-amber-900 w-full rounded border-t border-amber-950 -mt-1"></div>
+        </div>
+
+        <div class="mt-5 flex justify-center">
+          <button onclick="checkStageD()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-base px-8 py-3 rounded-2xl shadow-lg active:scale-95">喵喵確認答案 ✅</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= GRAND VICTORY SCREEN ================= -->
+    <section id="part-VICTORY" class="hidden space-y-6">
+      <div class="game-card rounded-3xl p-6 sm:p-8 text-center space-y-6">
+        <div class="text-7xl animate-bounce">🏆</div>
+        <div>
+          <h2 class="text-2xl sm:text-4xl font-black text-amber-500 drop-shadow">超級喵喵數學大師！</h2>
+          <p class="text-base sm:text-lg font-bold text-slate-600 mt-2">恭喜你順利通過全部 4 個數學關卡！太了不起了！🎉</p>
+        </div>
+
+        <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 max-w-sm mx-auto space-y-3">
+          <div class="text-2xl">⭐⭐⭐⭐⭐</div>
+          <div class="flex justify-between items-center font-bold text-slate-700 text-base">
+            <span>總完成題目：</span>
+            <span class="text-purple-700 text-xl font-black">24 / 24 題</span>
+          </div>
+          <div class="flex justify-between items-center font-bold text-slate-700 text-base">
+            <span>最終總得分：</span>
+            <span id="final-score-text" class="text-rose-600 text-2xl font-black">240 分</span>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="restartFullGame()" class="bg-gradient-to-r from-amber-400 to-pink-500 hover:from-amber-500 hover:to-pink-600 text-white font-black text-lg px-10 py-4 rounded-3xl shadow-xl active:scale-95 transition">
+            再玩一次大冒險 🔄
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ON-SCREEN KEYPAD ================= -->
+    <section id="keypad-container" class="mt-4 sm:mt-6 game-card rounded-3xl p-3 sm:p-4">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <span class="font-black text-slate-700 text-xs sm:text-sm">💡 喵喵數字鍵盤</span>
+        <span id="keypad-type-label" class="text-[11px] bg-pink-100 text-pink-800 font-black px-2.5 py-0.5 rounded-full border border-pink-200">阿拉伯數字</span>
+      </div>
+
+      <!-- Numeric Keypad -->
+      <div id="keypad-num" class="grid grid-cols-6 gap-1.5 sm:gap-2">
+        <button onclick="pressKey('1')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">1</button>
+        <button onclick="pressKey('2')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">2</button>
+        <button onclick="pressKey('3')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">3</button>
+        <button onclick="pressKey('4')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">4</button>
+        <button onclick="pressKey('5')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">5</button>
+        <button onclick="pressKey('0')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">0</button>
+        <button onclick="pressKey('6')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">6</button>
+        <button onclick="pressKey('7')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">7</button>
+        <button onclick="pressKey('8')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">8</button>
+        <button onclick="pressKey('9')" class="key-btn bg-white border-2 border-slate-200 text-lg sm:text-xl font-black p-2.5 sm:p-3 rounded-xl shadow hover:bg-pink-50">9</button>
+        <button onclick="pressKey('BACK')" class="key-btn bg-amber-100 text-amber-900 font-black p-2.5 sm:p-3 rounded-xl shadow text-sm hover:bg-amber-200">⌫</button>
+        <button onclick="pressKey('CLEAR')" class="key-btn bg-rose-100 text-rose-900 font-black p-2.5 sm:p-3 rounded-xl shadow text-xs hover:bg-rose-200">清除</button>
+      </div>
+
+      <!-- Chinese Keypad -->
+      <div id="keypad-cn" class="hidden grid grid-cols-6 gap-1.5 sm:gap-2">
+        <button onclick="pressKey('零')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">零</button>
+        <button onclick="pressKey('一')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">一</button>
+        <button onclick="pressKey('二')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">二</button>
+        <button onclick="pressKey('三')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">三</button>
+        <button onclick="pressKey('四')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">四</button>
+        <button onclick="pressKey('五')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">五</button>
+        <button onclick="pressKey('六')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">六</button>
+        <button onclick="pressKey('七')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">七</button>
+        <button onclick="pressKey('八')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">八</button>
+        <button onclick="pressKey('九')" class="key-btn bg-white border-2 border-slate-200 text-sm sm:text-base font-black p-2 rounded-xl shadow hover:bg-pink-50">九</button>
+        <button onclick="pressKey('百')" class="key-btn bg-amber-200 text-amber-950 font-black p-2 rounded-xl shadow hover:bg-amber-300">百</button>
+        <button onclick="pressKey('十')" class="key-btn bg-amber-200 text-amber-950 font-black p-2 rounded-xl shadow hover:bg-amber-300">十</button>
+        <button onclick="pressKey('BACK')" class="key-btn bg-amber-100 text-amber-900 font-black p-2 rounded-xl shadow col-span-3 text-xs hover:bg-amber-200">退格 ⌫</button>
+        <button onclick="pressKey('CLEAR')" class="key-btn bg-rose-100 text-rose-900 font-black p-2 rounded-xl shadow col-span-3 text-xs hover:bg-rose-200">清除全部</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Custom Feedback Overlay Modal -->
+  <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div id="modal-card" class="bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-emerald-400 shadow-2xl space-y-4">
+      <div id="modal-icon" class="text-6xl animate-bounce">🐱</div>
+      <h3 id="modal-title" class="text-2xl font-black text-slate-800">答對了！</h3>
+      <p id="modal-message" class="text-sm font-bold text-slate-600 leading-relaxed"></p>
+      <button id="modal-btn" onclick="closeModal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-2xl shadow-lg text-base active:scale-95">
+        繼續挑戰 ➡️
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer
+    let soundEnabled = true;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+    }
+
+    function playTone(freq, type, duration) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playCorrectSound() {
+      playTone(523.25, 'triangle', 0.12);
+      setTimeout(() => playTone(659.25, 'triangle', 0.12), 90);
+      setTimeout(() => playTone(783.99, 'triangle', 0.25), 180);
+    }
+
+    function playWrongSound() {
+      playTone(220, 'sawtooth', 0.18);
+      setTimeout(() => playTone(170, 'sawtooth', 0.25), 120);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-toggle').innerText = soundEnabled ? '🔊' : '🔇';
+    }
+
+    // Modal Manager
+    let modalCallback = null;
+
+    function showFeedbackModal(isSuccess, title, message, onNext) {
+      modalCallback = onNext;
+      const overlay = document.getElementById('modal-overlay');
+      const card = document.getElementById('modal-card');
+      const icon = document.getElementById('modal-icon');
+      const titleEl = document.getElementById('modal-title');
+      const msgEl = document.getElementById('modal-message');
+      const btn = document.getElementById('modal-btn');
+
+      if (isSuccess) {
+        card.className = "bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-emerald-400 shadow-2xl space-y-4";
+        icon.innerText = "🐱🎉";
+        titleEl.innerText = title || "喵喵說：答對了！太棒了！";
+        titleEl.className = "text-2xl font-black text-emerald-600";
+        btn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-2xl shadow-lg text-base active:scale-95";
+      } else {
+        card.className = "bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-rose-400 shadow-2xl space-y-4";
+        icon.innerText = "🐱🐾";
+        titleEl.innerText = title || "喵喵鼓勵你：再試一次！";
+        titleEl.className = "text-2xl font-black text-rose-600";
+        btn.className = "w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-3 rounded-2xl shadow-lg text-base active:scale-95";
+      }
+
+      msgEl.innerText = message || "";
+      overlay.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.add('hidden');
+      if (modalCallback) {
+        modalCallback();
+        modalCallback = null;
+      }
+    }
+
+    // Global Game Progression State
+    let currentScore = 0;
+    let activeSlotId = null;
+
+    let currentStage = 'A'; // 'A', 'B', 'C', 'D', 'VICTORY'
+    let currentQuestionIndex = 1; // 1 to 6
+    const totalQuestionsPerStage = 6;
+
+    // Stage A State
+    let partAType = 'read';
+    let targetNumA = 485;
+    let beadsStateA = { h: 0, t: 0, o: 0 };
+    let inputsA = {
+      'write-arabic': '', 'write-chinese': '',
+      'digit-h': '', 'val-h': '',
+      'digit-t': '', 'val-t': '',
+      'digit-o': '', 'val-o': '',
+      'exp-total': '', 'exp-h': '', 'exp-t': '', 'exp-o': ''
+    };
+
+    // Stage B State
+    let numsB = [361, 631, 163];
+    let bOrderMode = 'asc';
+    let userBOrder = [];
+
+    // Stage C State
+    let partCSub = 'C1';
+    let currentC1ShapeCount = 4;
+    let inputsC1 = { 'shape-angles': '' };
+    let anglesC2 = { A: 45, B: 90, C: 135 };
+    let c2OrderMode = 'desc';
+    let userC2Order = [];
+
+    // Stage D State
+    let trainData = [];
+
+    window.onload = function() {
+      updateStageUI();
+      initStageAQuestion();
+    };
+
+    function updateStageProgressHeader() {
+      const stageTitles = {
+        'A': 'Stage A: 珠串與三位數',
+        'B': 'Stage B: 三位數比較',
+        'C': 'Stage C: 角與圖形',
+        'D': 'Stage D: 喵喵火車規律'
+      };
+
+      document.getElementById('stage-title-text').innerText = stageTitles[currentStage] || '';
+      document.getElementById('question-count-text').innerText = `第 ${currentQuestionIndex} / ${totalQuestionsPerStage} 題`;
+      
+      const fillPct = (currentQuestionIndex / totalQuestionsPerStage) * 100;
+      document.getElementById('stage-progress-fill').style.width = `${fillPct}%`;
+    }
+
+    function updateStageUI() {
+      ['A', 'B', 'C', 'D'].forEach(s => {
+        const section = document.getElementById(`part-${s}`);
+        const badge = document.getElementById(`stage-badge-${s}`);
+        
+        if (s === currentStage) {
+          section.classList.remove('hidden');
+          badge.className = "flex-1 text-center py-1.5 px-1 rounded-xl font-black text-xs sm:text-sm border-2 stage-badge-active";
+        } else {
+          section.classList.add('hidden');
+          if (s < currentStage) {
+            badge.className = "flex-1 text-center py-1 px-1 rounded-xl font-black text-[10px] sm:text-xs border stage-badge-done";
+          } else {
+            badge.className = "flex-1 text-center py-1 px-1 rounded-xl font-black text-[10px] sm:text-xs bg-pink-600/60 border border-pink-400/40 text-pink-200/60";
+          }
+        }
+      });
+
+      document.getElementById('part-VICTORY').classList.add('hidden');
+      document.getElementById('stage-progress-header').classList.remove('hidden');
+      document.getElementById('keypad-container').classList.remove('hidden');
+
+      if (currentStage === 'VICTORY') {
+        document.getElementById('stage-progress-header').classList.add('hidden');
+        document.getElementById('keypad-container').classList.add('hidden');
+        document.getElementById('part-VICTORY').classList.remove('hidden');
+      } else {
+        updateStageProgressHeader();
+      }
+    }
+
+    function advanceQuestion() {
+      if (currentQuestionIndex < totalQuestionsPerStage) {
+        currentQuestionIndex++;
+        updateStageProgressHeader();
+        loadCurrentStageQuestion();
+      } else {
+        // Stage Complete! Transition to Next Stage
+        if (currentStage === 'A') {
+          currentStage = 'B';
+          currentQuestionIndex = 1;
+          updateStageUI();
+          showFeedbackModal(true, "🎉 恭喜通過 Stage A！", "準備好挑戰「Stage B: 三位數比較」了嗎？衝啊！", () => loadCurrentStageQuestion());
+        } else if (currentStage === 'B') {
+          currentStage = 'C';
+          currentQuestionIndex = 1;
+          updateStageUI();
+          showFeedbackModal(true, "🎉 恭喜通過 Stage B！", "準備好挑戰「Stage C: 角與圖形」了嗎？衝啊！", () => loadCurrentStageQuestion());
+        } else if (currentStage === 'C') {
+          currentStage = 'D';
+          currentQuestionIndex = 1;
+          updateStageUI();
+          showFeedbackModal(true, "🎉 恭喜通過 Stage C！", "準備好挑戰「Stage D: 喵喵火車規律」了嗎？最後關卡！", () => loadCurrentStageQuestion());
+        } else if (currentStage === 'D') {
+          // Grand Victory!
+          currentStage = 'VICTORY';
+          updateStageUI();
+          document.getElementById('final-score-text').innerText = `${currentScore} 分`;
+          playCorrectSound();
+          triggerConfetti();
+        }
+      }
+    }
+
+    function loadCurrentStageQuestion() {
+      if (currentStage === 'A') initStageAQuestion();
+      else if (currentStage === 'B') initStageBQuestion();
+      else if (currentStage === 'C') initStageCQuestion();
+      else if (currentStage === 'D') initStageDQuestion();
+    }
+
+    function addScore(pts) {
+      currentScore += pts;
+      document.getElementById('score-display').innerText = currentScore;
+    }
+
+    function triggerConfetti() {
+      try {
+        confetti({ particleCount: 65, spread: 75, origin: { y: 0.6 } });
+      } catch (e) {}
+    }
+
+    // ================= STAGE A LOGIC =================
+    function initStageAQuestion() {
+      partAType = Math.random() > 0.5 ? 'read' : 'bead';
+      targetNumA = Math.floor(Math.random() * 899) + 100;
+
+      const badge = document.getElementById('partA-type-badge');
+      badge.innerText = partAType === 'read' ? '看圖寫數與位值 📖' : '看數撥珠與位值 🐾';
+
+      document.getElementById('section-read-inputs').style.display = partAType === 'read' ? 'grid' : 'none';
+      document.getElementById('target-number-prompt').classList.toggle('hidden', partAType === 'read');
+      document.getElementById('bead-controls').classList.toggle('hidden', partAType === 'read');
+
+      document.getElementById('target-num-text').innerText = targetNumA;
+
+      // Clear all Stage A inputs completely
+      for (let k in inputsA) {
+        inputsA[k] = '';
+        const el = document.getElementById(`input-${k}`);
+        if (el) el.innerText = '';
+      }
+
+      if (partAType === 'read') {
+        const h = Math.floor(targetNumA / 100);
+        const t = Math.floor((targetNumA % 100) / 10);
+        const o = targetNumA % 10;
+        beadsStateA = { h, t, o };
+        setActiveSlot('write-arabic', 'num');
+      } else {
+        beadsStateA = { h: 0, t: 0, o: 0 };
+        setActiveSlot('digit-h', 'num');
+      }
+
+      renderAbacusBeads();
+    }
+
+    function changeBead(rod, delta) {
+      beadsStateA[rod] = Math.max(0, Math.min(9, beadsStateA[rod] + delta));
+      renderAbacusBeads();
+    }
+
+    function renderAbacusBeads() {
+      ['h', 't', 'o'].forEach(rod => {
+        const containerId = rod === 'h' ? 'beads-hundreds' : (rod === 't' ? 'beads-tens' : 'beads-ones');
+        const count = beadsStateA[rod];
+        const cx = rod === 'h' ? 70 : (rod === 't' ? 150 : 230);
+        const color = rod === 'h' ? '#f43f5e' : (rod === 't' ? '#0D9488' : '#ea580c');
+        
+        let html = '';
+        for (let i = 0; i < count; i++) {
+          const cy = 136 - (i * 11);
+          html += `<ellipse cx="${cx}" cy="${cy}" rx="13" ry="4.5" fill="${color}" stroke="#1e293b" stroke-width="1.2" />`;
+        }
+        document.getElementById(containerId).innerHTML = html;
+
+        const countLbl = document.getElementById(`bead-count-${rod}`);
+        if (countLbl) countLbl.innerText = count;
+      });
+    }
+
+    function numToChinese(n) {
+      const cnNums = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+      const h = Math.floor(n / 100);
+      const t = Math.floor((n % 100) / 10);
+      const o = n % 10;
+
+      let res = cnNums[h] + '百';
+      if (t === 0 && o === 0) return res;
+      if (t === 0) return res + '零' + cnNums[o];
+      res += cnNums[t] + '十';
+      if (o !== 0) res += cnNums[o];
+      return res;
+    }
+
+    function checkStageA() {
+      const h = Math.floor(targetNumA / 100);
+      const t = Math.floor((targetNumA % 100) / 10);
+      const o = targetNumA % 10;
+
+      const expectedHVal = (h * 100).toString();
+      const expectedTVal = (t * 10).toString();
+      const expectedOVal = o.toString();
+
+      let correct = true;
+
+      if (partAType === 'bead') {
+        if (beadsStateA.h !== h || beadsStateA.t !== t || beadsStateA.o !== o) {
+          correct = false;
+        }
+      } else {
+        if (inputsA['write-arabic'].trim() !== targetNumA.toString()) correct = false;
+        if (inputsA['write-chinese'].trim() !== numToChinese(targetNumA)) correct = false;
+      }
+
+      if (inputsA['digit-h'].trim() !== h.toString()) correct = false;
+      if (inputsA['val-h'].trim() !== expectedHVal) correct = false;
+
+      if (inputsA['digit-t'].trim() !== t.toString()) correct = false;
+      if (inputsA['val-t'].trim() !== expectedTVal) correct = false;
+
+      if (inputsA['digit-o'].trim() !== o.toString()) correct = false;
+      if (inputsA['val-o'].trim() !== expectedOVal) correct = false;
+
+      if (inputsA['exp-total'].trim() !== targetNumA.toString()) correct = false;
+      if (inputsA['exp-h'].trim() !== expectedHVal) correct = false;
+      if (inputsA['exp-t'].trim() !== expectedTVal) correct = false;
+      if (inputsA['exp-o'].trim() !== expectedOVal) correct = false;
+
+      if (correct) {
+        playCorrectSound();
+        triggerConfetti();
+        addScore(10);
+        showFeedbackModal(true, "答對了！太棒了！🎉", "你成功答對了位值數字與分解算式！", () => advanceQuestion());
+      } else {
+        playWrongSound();
+        showFeedbackModal(false, "喵喵提醒你：再試一次！", "有地方算錯或未填寫齊全，請仔細檢查所有數字與數值喔！", null);
+      }
+    }
+
+    // ================= STAGE B LOGIC =================
+    function initStageBQuestion() {
+      bOrderMode = Math.random() > 0.5 ? 'asc' : 'desc';
+      
+      const base = 100 + Math.floor(Math.random() * 800);
+      const digits = [Math.floor(base / 100), Math.floor((base % 100) / 10), base % 10];
+      
+      const n1 = digits[0] * 100 + digits[1] * 10 + digits[2];
+      const n2 = digits[2] * 100 + digits[0] * 10 + digits[1];
+      const n3 = digits[1] * 100 + digits[2] * 10 + digits[0];
+
+      numsB = Array.from(new Set([n1, n2, n3]));
+      while (numsB.length < 3) {
+        numsB.push(Math.floor(Math.random() * 899) + 100);
+        numsB = Array.from(new Set(numsB));
+      }
+
+      numsB.sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`num-card-${i}`).innerText = numsB[i];
+      }
+
+      document.getElementById('b-prompt').innerText = bOrderMode === 'asc' 
+        ? '請將下列各組數【由小至大】排列：' 
+        : '請將下列各組數【由大至小】排列：';
+
+      document.getElementById('b-sym-1').innerText = bOrderMode === 'asc' ? '<' : '>';
+      document.getElementById('b-sym-2').innerText = bOrderMode === 'asc' ? '<' : '>';
+
+      resetBOrder();
+    }
+
+    function clickNumCard(index) {
+      const val = numsB[index];
+      if (userBOrder.length < 3 && !userBOrder.includes(val)) {
+        userBOrder.push(val);
+        updateBSlots();
+      }
+    }
+
+    function resetBOrder() {
+      userBOrder = [];
+      updateBSlots();
+    }
+
+    function updateBSlots() {
+      for (let i = 1; i <= 3; i++) {
+        const slotEl = document.getElementById(`slot-b-${i}`);
+        slotEl.innerText = userBOrder[i - 1] !== undefined ? userBOrder[i - 1] : '';
+      }
+    }
+
+    function checkStageB() {
+      if (userBOrder.length < 3) {
+        showFeedbackModal(false, "還未排完喔！", "請點擊上方所有 3 個數字卡片填入下方位置！", null);
+        return;
+      }
+
+      const sorted = [...numsB].sort((a, b) => bOrderMode === 'asc' ? a - b : b - a);
+
+      if (userBOrder.join(',') === sorted.join(',')) {
+        playCorrectSound();
+        triggerConfetti();
+        addScore(10);
+        showFeedbackModal(true, "排列完全正確！🌟", "你成功比較了三個數的大小！", () => advanceQuestion());
+      } else {
+        playWrongSound();
+        showFeedbackModal(false, "排列不正確喔！", "請觀察百位、十位與個位數字的大小順序，再試一次！", null);
+      }
+    }
+
+    // ================= STAGE C LOGIC (HTML DIV WRAPPERS FOR 100% SVG RELIABILITY) =================
+    function getShapeSVGString(shapeName) {
+      if (shapeName === 'triangle') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><polygon points="100,20 30,130 170,130" fill="#fef08a" stroke="#ca8a04" stroke-width="4" stroke-linejoin="round"/></svg>`;
+      } else if (shapeName === 'rectangle') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><rect x="35" y="30" width="130" height="90" fill="#bbf7d0" stroke="#16a34a" stroke-width="4" stroke-linejoin="round"/></svg>`;
+      } else if (shapeName === 'pentagon') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><polygon points="100,20 165,65 140,130 60,130 35,65" fill="#c7d2fe" stroke="#4f46e5" stroke-width="4" stroke-linejoin="round"/></svg>`;
+      } else if (shapeName === 'hexagon') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><polygon points="100,15 155,45 155,105 100,135 45,105 45,45" fill="#fbcfe8" stroke="#db2777" stroke-width="4" stroke-linejoin="round"/></svg>`;
+      } else if (shapeName === 'circle') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><circle cx="100" cy="75" r="50" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>`;
+      } else if (shapeName === 'ellipse') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><ellipse cx="100" cy="75" rx="65" ry="40" fill="#fed7aa" stroke="#ea580c" stroke-width="4"/></svg>`;
+      } else if (shapeName === 'heart') {
+        return `<svg viewBox="0 0 200 150" class="w-56 h-40 drop-shadow mx-auto block"><path d="M 100 125 C 100 125 35 85 35 52 C 35 32 50 18 70 18 C 85 18 96 28 100 38 C 104 28 115 18 130 18 C 150 18 165 32 165 52 C 165 85 100 125 100 125 Z" fill="#fbcfe8" stroke="#e11d48" stroke-width="4" stroke-linejoin="round"/></svg>`;
+      }
+      return '';
+    }
+
+    function getAngleSVGString(deg) {
+      const rad = (-deg * Math.PI) / 180;
+      const len = 38;
+      const cx = 45, cy = 55;
+      const x1 = cx + len;
+      const y1 = cy;
+      const x2 = cx + len * Math.cos(rad);
+      const y2 = cy + len * Math.sin(rad);
+
+      let arcPath = `<path d="M ${cx+14} ${cy} A 14 14 0 0 0 ${cx + 14 * Math.cos(rad)} ${cy + 14 * Math.sin(rad)}" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="2,2"/>`;
+      if (deg === 90) {
+        arcPath = `<rect x="${cx}" y="${cy-10}" width="10" height="10" fill="none" stroke="#ef4444" stroke-width="2" />`;
+      }
+
+      return `<svg viewBox="0 0 100 80" class="w-full h-20 mt-1 block mx-auto">
+        <line x1="${cx}" y1="${cy}" x2="${x1}" y2="${y1}" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>
+        <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>
+        ${arcPath}
+      </svg>`;
+    }
+
+    function initStageCQuestion() {
+      partCSub = Math.random() > 0.5 ? 'C1' : 'C2';
+      
+      const box1 = document.getElementById('box-C1');
+      const box2 = document.getElementById('box-C2');
+
+      box1.classList.toggle('hidden', partCSub !== 'C1');
+      box2.classList.toggle('hidden', partCSub !== 'C2');
+
+      if (partCSub === 'C1') {
+        inputsC1['shape-angles'] = '';
+        document.getElementById('input-shape-angles').innerText = '';
+        setActiveSlot('shape-angles', 'num');
+
+        const shapeConfigs = [
+          { name: 'triangle', angles: 3 },
+          { name: 'rectangle', angles: 4 },
+          { name: 'pentagon', angles: 5 },
+          { name: 'hexagon', angles: 6 },
+          { name: 'circle', angles: 0 },
+          { name: 'ellipse', angles: 0 },
+          { name: 'heart', angles: 0 }
+        ];
+
+        const chosen = shapeConfigs[Math.floor(Math.random() * shapeConfigs.length)];
+        currentC1ShapeCount = chosen.angles;
+        
+        // 100% Reliable HTML Div Wrapper replacement
+        const wrapper = document.getElementById('shape-c1-wrapper');
+        if (wrapper) wrapper.innerHTML = getShapeSVGString(chosen.name);
+      } else {
+        const a = 30 + Math.floor(Math.random() * 30);
+        const b = 80 + Math.floor(Math.random() * 20);
+        const c = 115 + Math.floor(Math.random() * 40);
+
+        const angles = [a, b, c].sort(() => Math.random() - 0.5);
+        anglesC2 = { A: angles[0], B: angles[1], C: angles[2] };
+
+        c2OrderMode = Math.random() > 0.5 ? 'desc' : 'asc';
+        document.getElementById('c2-order-prompt').innerText = c2OrderMode === 'desc' 
+          ? '請將下列 3 隻角按【由大至小】排列：' 
+          : '請將下列 3 隻角按【由小至大】排列：';
+
+        document.getElementById('c2-sym-1').innerText = c2OrderMode === 'desc' ? '>' : '<';
+        document.getElementById('c2-sym-2').innerText = c2OrderMode === 'desc' ? '>' : '<';
+
+        // Inject SVG markup directly into wrapper divs
+        document.getElementById('angle-A-wrapper').innerHTML = getAngleSVGString(anglesC2.A);
+        document.getElementById('angle-B-wrapper').innerHTML = getAngleSVGString(anglesC2.B);
+        document.getElementById('angle-C-wrapper').innerHTML = getAngleSVGString(anglesC2.C);
+
+        resetC2Order();
+      }
+    }
+
+    function checkStageC1() {
+      const val = inputsC1['shape-angles'].trim();
+      if (val === currentC1ShapeCount.toString()) {
+        playCorrectSound();
+        triggerConfetti();
+        addScore(10);
+        showFeedbackModal(true, "答對了！非常棒！🎉", `圖中的角數確實是 ${currentC1ShapeCount} 隻！`, () => advanceQuestion());
+      } else {
+        playWrongSound();
+        showFeedbackModal(false, "答案不正確喔！", "請再數一次圖形的角數，注意圓滑曲線沒有角！", null);
+      }
+    }
+
+    function clickAngleCard(label) {
+      if (userC2Order.length < 3 && !userC2Order.includes(label)) {
+        userC2Order.push(label);
+        updateC2Slots();
+      }
+    }
+
+    function resetC2Order() {
+      userC2Order = [];
+      updateC2Slots();
+    }
+
+    function updateC2Slots() {
+      for (let i = 1; i <= 3; i++) {
+        const slotEl = document.getElementById(`slot-c2-${i}`);
+        slotEl.innerText = userC2Order[i - 1] ? `角 ${userC2Order[i - 1]}` : '';
+      }
+    }
+
+    function checkStageC2() {
+      if (userC2Order.length < 3) {
+        showFeedbackModal(false, "還未排完喔！", "請點擊上方角 A, B, C 圖案填入所有方格！", null);
+        return;
+      }
+
+      const sorted = ['A', 'B', 'C'].sort((x, y) => {
+        return c2OrderMode === 'desc' ? anglesC2[y] - anglesC2[x] : anglesC2[x] - anglesC2[y];
+      });
+
+      if (userC2Order.join('') === sorted.join('')) {
+        playCorrectSound();
+        triggerConfetti();
+        addScore(10);
+        showFeedbackModal(true, "排列完全正確！🌟", "你成功比較了三個角的大小！", () => advanceQuestion());
+      } else {
+        playWrongSound();
+        showFeedbackModal(false, "排列不正確喔！", "請重新觀察角的大小（張開程度），再試一次！", null);
+      }
+    }
+
+    // ================= STAGE D LOGIC =================
+    function initStageDQuestion() {
+      const stepTypes = [1, -1, 2, -2, 5, -5, 10, -10, 100, -100];
+      const step = stepTypes[Math.floor(Math.random() * stepTypes.length)];
+      
+      let minStart = 100;
+      let maxStart = 999;
+      if (step > 0) {
+        maxStart = 999 - 4 * step;
+      } else {
+        minStart = 100 - 4 * step;
+      }
+
+      const start = Math.floor(Math.random() * (maxStart - minStart + 1)) + minStart;
+
+      trainData = [];
+      for (let i = 0; i < 5; i++) {
+        const val = start + i * step;
+        trainData.push({
+          target: val,
+          isBlank: false,
+          userVal: ''
+        });
+      }
+
+      const blankIndices = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5).slice(0, 2);
+      blankIndices.forEach(idx => {
+        trainData[idx].isBlank = true;
+      });
+
+      renderTrainCarriages();
+      setActiveTrainCarriage(blankIndices[0]);
+    }
+
+    function renderTrainCarriages() {
+      for (let i = 0; i < 5; i++) {
+        const carEl = document.getElementById(`train-car-${i}`);
+        const valEl = document.getElementById(`train-val-${i}`);
+        const data = trainData[i];
+
+        if (!data.isBlank) {
+          valEl.innerText = data.target;
+          valEl.className = "text-base sm:text-lg font-black text-slate-800 bg-slate-100 w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1";
+          carEl.onclick = null;
+        } else {
+          valEl.innerText = data.userVal || '?';
+          valEl.className = "text-base sm:text-lg font-black text-amber-700 bg-white border-2 border-amber-400 w-18 sm:w-20 h-8 rounded-lg flex items-center justify-center mt-1 shadow-inner";
+          carEl.onclick = () => setActiveTrainCarriage(i);
+        }
+      }
+    }
+
+    function setActiveTrainCarriage(index) {
+      if (!trainData[index].isBlank) return;
+      
+      for (let i = 0; i < 5; i++) {
+        const valEl = document.getElementById(`train-val-${i}`);
+        if (trainData[i].isBlank) {
+          if (i === index) {
+            valEl.classList.add('active-slot');
+          } else {
+            valEl.classList.remove('active-slot');
+          }
+        }
+      }
+
+      activeSlotId = `train-${index}`;
+      showKeypad('num');
+    }
+
+    function checkStageD() {
+      let correct = true;
+      for (let i = 0; i < 5; i++) {
+        if (trainData[i].isBlank) {
+          if (trainData[i].userVal.trim() !== trainData[i].target.toString()) {
+            correct = false;
+          }
+        }
+      }
+
+      if (correct) {
+        playCorrectSound();
+        triggerConfetti();
+        addScore(10);
+        showFeedbackModal(true, "火車成功出發！🚂💨", "喵喵車長謝謝你！彩虹火車的規律填數完全正確！", () => advanceQuestion());
+      } else {
+        playWrongSound();
+        showFeedbackModal(false, "喵喵車長提醒：數字有錯喔！", "請檢查前後車廂的遞增或遞減規律，再試一次！", null);
+      }
+    }
+
+    function restartFullGame() {
+      currentScore = 0;
+      currentStage = 'A';
+      currentQuestionIndex = 1;
+      document.getElementById('score-display').innerText = currentScore;
+      updateStageUI();
+      loadCurrentStageQuestion();
+    }
+
+    // ================= KEYPAD INPUT LOGIC =================
+    function setActiveSlot(slotId, keypadType) {
+      if (activeSlotId) {
+        if (activeSlotId.startsWith('train-')) {
+          const prevIdx = parseInt(activeSlotId.split('-')[1]);
+          const prevEl = document.getElementById(`train-val-${prevIdx}`);
+          if (prevEl) prevEl.classList.remove('active-slot');
+        } else {
+          const prev = document.getElementById(`input-${activeSlotId}`);
+          if (prev) prev.classList.remove('active-slot');
+        }
+      }
+
+      activeSlotId = slotId;
+      
+      const current = document.getElementById(`input-${slotId}`);
+      if (current) current.classList.add('active-slot');
+
+      showKeypad(keypadType);
+    }
+
+    function showKeypad(type) {
+      document.getElementById('keypad-num').classList.toggle('hidden', type !== 'num');
+      document.getElementById('keypad-cn').classList.toggle('hidden', type !== 'cn');
+      document.getElementById('keypad-type-label').innerText = type === 'num' ? '阿拉伯數字' : '中國數字';
+    }
+
+    function pressKey(key) {
+      playTone(450, 'sine', 0.04);
+
+      if (activeSlotId && activeSlotId.startsWith('train-')) {
+        const idx = parseInt(activeSlotId.split('-')[1]);
+        if (key === 'CLEAR') {
+          trainData[idx].userVal = '';
+        } else if (key === 'BACK') {
+          trainData[idx].userVal = trainData[idx].userVal.slice(0, -1);
+        } else if (/^[0-9]$/.test(key)) {
+          if (trainData[idx].userVal.length < 3) {
+            trainData[idx].userVal += key;
+          }
+        }
+        renderTrainCarriages();
+        document.getElementById(`train-val-${idx}`).classList.add('active-slot');
+        return;
+      }
+
+      if (activeSlotId && inputsA.hasOwnProperty(activeSlotId)) {
+        if (key === 'CLEAR') {
+          inputsA[activeSlotId] = '';
+        } else if (key === 'BACK') {
+          inputsA[activeSlotId] = inputsA[activeSlotId].slice(0, -1);
+        } else {
+          inputsA[activeSlotId] += key;
+        }
+        document.getElementById(`input-${activeSlotId}`).innerText = inputsA[activeSlotId];
+      }
+
+      if (activeSlotId === 'shape-angles') {
+        if (key === 'CLEAR') {
+          inputsC1['shape-angles'] = '';
+        } else if (key === 'BACK') {
+          inputsC1['shape-angles'] = inputsC1['shape-angles'].slice(0, -1);
+        } else if (/^[0-9]$/.test(key)) {
+          inputsC1['shape-angles'] += key;
+        }
+        document.getElementById('input-shape-angles').innerText = inputsC1['shape-angles'];
+      }
+    }
+  </script>
+</body>
+</html>
